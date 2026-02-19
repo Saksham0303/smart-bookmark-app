@@ -6,6 +6,7 @@ import { BookModel } from './BookModel';
 import { Button } from '@/components/ui/button';
 import { useScrollReveal } from '@/hooks/use-scroll-reveal';
 import { signInWithGoogle } from '../lib/auth';
+import { supabase } from '@/lib/supabaseClient';
 
 function Hero() {
   const { ref: textRef, isVisible: textVisible } = useScrollReveal({
@@ -18,6 +19,19 @@ function Hero() {
   });
   const bookContainerRef = React.useRef<HTMLDivElement | null>(null);
   const [parallaxY, setParallaxY] = React.useState(0);
+  const [signedIn, setSignedIn] = React.useState(false);
+
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSignedIn(!!session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   React.useEffect(() => {
     const el = bookContainerRef.current;
@@ -65,14 +79,19 @@ function Hero() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-3 md:justify-start">
-            {/* Always show Sign in — clicking Dashboard works for logged-in users via /dashboard auth check */}
-            <Button
-              id="hero-signin-btn"
-              className="btn-primary-hero animate-bounce-subtle"
-              onClick={signInWithGoogle}
-            >
-              Sign in
-            </Button>
+            {signedIn ? (
+              <Button asChild className="btn-primary-hero animate-bounce-subtle">
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+            ) : (
+              <Button
+                id="hero-signin-btn"
+                className="btn-primary-hero animate-bounce-subtle"
+                onClick={signInWithGoogle}
+              >
+                Sign in
+              </Button>
+            )}
             <Button
               asChild
               variant="outline"
