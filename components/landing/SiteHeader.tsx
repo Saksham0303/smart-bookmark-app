@@ -35,7 +35,6 @@ export function SiteHeader() {
     if (btn) {
       btn.classList.remove('btn-shine');
       // trigger reflow to restart animation
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       btn.offsetWidth;
       btn.classList.add('btn-shine');
       btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
