@@ -18,7 +18,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Bookmark } from '@/lib/bookmarks';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabaseClient';
-import { useUser } from '@/hooks/useUser';
 
 type SortOption = 'newest' | 'oldest' | 'title';
 
@@ -46,12 +45,23 @@ function sortBookmarks(bookmarks: Bookmark[], sort: SortOption): Bookmark[] {
   return copy;
 }
 
+function mapRows(data: any[]): Bookmark[] {
+  return data.map((r: any) => ({
+    id: r.id,
+    title: r.title,
+    url: r.url,
+    notes: r.notes ?? undefined,
+    tags: Array.isArray(r.tags) ? r.tags : r.tags ? JSON.parse(r.tags) : [],
+    createdAt: r.createdAt ?? r.created_at ?? new Date().toISOString(),
+    favorite: !!r.favorite,
+  }));
+}
+
 export function DashboardClient() {
   const [bookmarks, setBookmarks] = React.useState<Bookmark[]>([]);
   const [search, setSearch] = React.useState('');
   const [sort, setSort] = React.useState<SortOption>('newest');
   const [favoritesOnly, setFavoritesOnly] = React.useState(false);
-  const user = useUser();
 
   const filtered = React.useMemo(() => {
     let next = sortBookmarks(filterBookmarks(bookmarks, search), sort);
@@ -61,41 +71,27 @@ export function DashboardClient() {
     return next;
   }, [bookmarks, search, sort, favoritesOnly]);
 
+  // Runs once on mount. Silently does nothing if user is not logged in.
   React.useEffect(() => {
     let mounted = true;
-    if (!user) {
-      setBookmarks([]);
-      return;
-    }
-
-    let mountedLocal = true;
 
     async function fetchBookmarks() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user || !mounted) return;
+
       try {
         const { data, error } = await supabase
           .from('bookmarks')
           .select('*')
-          .eq('user_id', user!.id)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching bookmarks:', error);
-          return;
-        }
+        if (error || !mounted) return;
 
-        if (!mountedLocal) return;
-
-        const next: Bookmark[] = (data || []).map((r: any) => ({
-          id: r.id,
-          title: r.title,
-          url: r.url,
-          notes: r.notes ?? undefined,
-          tags: Array.isArray(r.tags) ? r.tags : r.tags ? JSON.parse(r.tags) : [],
-          createdAt: r.createdAt ?? r.created_at ?? new Date().toISOString(),
-          favorite: !!r.favorite,
-        }));
-
-        setBookmarks(next);
+        setBookmarks(mapRows(data || []));
       } catch (err) {
         console.error('Unexpected error fetching bookmarks:', err);
       }
@@ -105,9 +101,8 @@ export function DashboardClient() {
 
     return () => {
       mounted = false;
-      mountedLocal = false;
     };
-  }, [user]);
+  }, []); // empty deps — layout never changes based on auth state
 
   const handleCreate = (bookmark: Bookmark) => {
     setBookmarks((prev) => [bookmark, ...prev]);
@@ -130,33 +125,33 @@ export function DashboardClient() {
     );
 
     try {
-      const { error } = await supabase.from('bookmarks').update({ favorite: newFavorite }).eq('id', id);
+      const { error } = await supabase
+        .from('bookmarks')
+        .update({ favorite: newFavorite })
+        .eq('id', id);
+
       if (error) {
         console.error('Error updating favorite:', error);
-      } else {
-        // Refresh bookmarks from the server to ensure persisted state
-        if (user) {
-          const { data, error: fetchError } = await supabase
-            .from('bookmarks')
-            .select('*')
-            .eq('user_id', user!.id)
-            .order('created_at', { ascending: false });
+        return;
+      }
 
-          if (fetchError) {
-            console.error('Error re-fetching bookmarks after favorite toggle:', fetchError);
-          } else {
-            const next: Bookmark[] = (data || []).map((r: any) => ({
-              id: r.id,
-              title: r.title,
-              url: r.url,
-              notes: r.notes ?? undefined,
-              tags: Array.isArray(r.tags) ? r.tags : r.tags ? JSON.parse(r.tags) : [],
-              createdAt: r.createdAt ?? r.created_at ?? new Date().toISOString(),
-              favorite: !!r.favorite,
-            }));
-            setBookmarks(next);
-          }
-        }
+      // Re-fetch to sync persisted state
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data, error: fetchError } = await supabase
+        .from('bookmarks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (fetchError) {
+        console.error('Error re-fetching bookmarks after favorite toggle:', fetchError);
+      } else {
+        setBookmarks(mapRows(data || []));
       }
     } catch (e) {
       console.error('Unexpected error updating favorite:', e);
@@ -262,4 +257,3 @@ export function DashboardClient() {
     </div>
   );
 }
-

@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { useUser } from '@/hooks/useUser';
 import { LogoutButton } from '@/components/dashboard/LogoutButton';
 import {
   Sheet,
@@ -19,7 +18,8 @@ import { Menu } from 'lucide-react';
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = React.useState(false);
-  const user = useUser();
+
+  // Removed: useUser() — no auth-based conditional rendering
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -34,37 +34,15 @@ export function SiteHeader() {
     const btn = document.getElementById('hero-signin-btn');
     if (btn) {
       btn.classList.remove('btn-shine');
-      // trigger reflow to restart animation
-      btn.offsetWidth;
+      btn.offsetWidth; // trigger reflow to restart animation
       btn.classList.add('btn-shine');
       btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
       (btn as HTMLElement).focus();
       setTimeout(() => btn.classList.remove('btn-shine'), 1400);
     } else {
-      // fallback scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
-  function UserGetStarted() {
-    if (user) return <LogoutButton />;
-    return (
-      <a
-        href="#cta"
-        onClick={handleGetStarted}
-        className="transition-colors hover:text-slate-50 hover:scale-105 inline-block"
-      >
-        Get started
-      </a>
-    );
-  }
-
-  function MobileGetStarted() {
-    if (user) return <LogoutButton />;
-    return (
-      <button onClick={handleGetStarted} className="px-2 py-2 text-left">Get started</button>
-    );
-  }
 
   return (
     <header
@@ -75,6 +53,7 @@ export function SiteHeader() {
       }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2 transition-transform duration-200 hover:scale-105"
@@ -87,6 +66,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
+        {/* Desktop nav — always the same, no auth branching */}
         <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
           <a
             href="#features"
@@ -100,10 +80,20 @@ export function SiteHeader() {
           >
             How it works
           </a>
-          <UserGetStarted />
+          <a
+            href="#cta"
+            onClick={handleGetStarted}
+            className="transition-colors hover:text-slate-50 hover:scale-105 inline-block"
+          >
+            Get started
+          </a>
+          {/* LogoutButton handles its own auth check internally — no UI shift */}
+          <LogoutButton />
         </nav>
 
+        {/* Right side actions */}
         <div className="flex items-center gap-2">
+          {/* Mobile menu */}
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -119,7 +109,10 @@ export function SiteHeader() {
                 <div className="mt-4 flex flex-col gap-3">
                   <a href="#features" className="px-2 py-2">Features</a>
                   <a href="#how-it-works" className="px-2 py-2">How it works</a>
-                  <MobileGetStarted />
+                  <button onClick={handleGetStarted} className="px-2 py-2 text-left">
+                    Get started
+                  </button>
+                  <LogoutButton />
                 </div>
                 <SheetClose asChild>
                   <Button variant="ghost" className="mt-6">Close</Button>
@@ -146,4 +139,3 @@ export function SiteHeader() {
     </header>
   );
 }
-

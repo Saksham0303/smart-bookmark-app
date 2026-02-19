@@ -1,39 +1,14 @@
-"use client";
+import { createClient } from "@supabase/supabase-js";
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import type { User } from '@supabase/supabase-js';
-
-export function useUser(): User | null {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function fetchCurrentUser() {
-      try {
-        const { data } = await supabase.auth.getUser();
-        const current = data?.user ?? null;
-        if (mounted) setUser(current);
-      } catch (err) {
-        // ignore - keep user null
-        if (mounted) setUser(null);
-      }
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce', // required for proper OAuth callback on Vercel
     }
-
-    fetchCurrentUser();
-
-    const { data: subscriptionData } = supabase.auth.onAuthStateChange((_: any, session: any) => {
-      setUser(session?.user ?? null);
-    });
-
-    const subscription = subscriptionData?.subscription;
-
-    return () => {
-      mounted = false;
-      subscription?.unsubscribe();
-    };
-  }, []);
-
-  return user;
-}
+  }
+);

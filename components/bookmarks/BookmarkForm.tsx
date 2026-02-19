@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { parseTags, normalizeUrl, type Bookmark } from '@/lib/bookmarks';
 import { supabase } from '@/lib/supabaseClient';
-import { useUser } from '@/hooks/useUser';
+import { toast } from '@/hooks/use-toast';
 
 const schema = z.object({
   title: z.string().min(2, 'Title should be at least 2 characters'),
@@ -44,12 +44,17 @@ export function BookmarkForm({
     mode: 'onSubmit',
   });
 
-  const user = useUser();
-
   const onSubmit = async (values: Values) => {
+    // Check auth at submit time — does NOT affect layout
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
-      // user must be signed in to save bookmarks
-      console.error('User not signed in');
+      toast({
+        title: 'Sign in to save bookmarks',
+        description: 'Create an account to start saving links.',
+      });
       return;
     }
 
@@ -64,21 +69,22 @@ export function BookmarkForm({
     };
 
     try {
-      const { data, error } = await supabase.from('bookmarks').insert([
+      const { error } = await supabase.from('bookmarks').insert([
         {
           id: bookmark.id,
           title: bookmark.title,
           url: bookmark.url,
           notes: bookmark.notes ?? null,
           tags: bookmark.tags,
-            favorite: false,
-            created_at: bookmark.createdAt,
+          favorite: false,
+          created_at: bookmark.createdAt,
           user_id: user.id,
         },
       ]);
 
       if (error) {
         console.error('Error inserting bookmark:', error);
+        toast({ title: 'Error', description: 'Could not save bookmark.' });
         return;
       }
 
@@ -181,4 +187,3 @@ export function BookmarkForm({
     </Form>
   );
 }
-

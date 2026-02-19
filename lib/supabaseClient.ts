@@ -7,7 +7,8 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      flowType: 'pkce', // required for proper OAuth callback on Vercel
     }
   }
 );

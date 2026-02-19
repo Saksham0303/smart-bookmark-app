@@ -6,22 +6,19 @@ import { BookModel } from './BookModel';
 import { Button } from '@/components/ui/button';
 import { useScrollReveal } from '@/hooks/use-scroll-reveal';
 import { signInWithGoogle } from '../lib/auth';
-import { useUser } from '@/hooks/useUser';
 
 function Hero() {
   const { ref: textRef, isVisible: textVisible } = useScrollReveal({
     threshold: 0.2,
     rootMargin: '0px',
   });
-    const { ref: bookRef, isVisible: bookVisible } = useScrollReveal({
-      threshold: 0.2,
-      rootMargin: '0px',
-    });
-    const bookContainerRef = React.useRef<HTMLDivElement | null>(null);
-    const [parallaxY, setParallaxY] = React.useState(0);
+  const { ref: bookRef, isVisible: bookVisible } = useScrollReveal({
+    threshold: 0.2,
+    rootMargin: '0px',
+  });
+  const bookContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const [parallaxY, setParallaxY] = React.useState(0);
 
-    // BookModel is statically imported so it remains mounted and visible.
-  const user = useUser();
   React.useEffect(() => {
     const el = bookContainerRef.current;
     if (!el) return;
@@ -30,7 +27,6 @@ function Hero() {
     const onScroll = () => {
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      // small parallax: move slightly based on distance from center
       const offset = (rect.top - window.innerHeight / 2) * -0.03;
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => setParallaxY(offset));
@@ -69,15 +65,14 @@ function Hero() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-3 md:justify-start">
-            {user ? (
-              <Button asChild className="btn-primary-hero animate-bounce-subtle">
-                <Link href="/dashboard">Dashboard</Link>
-              </Button>
-            ) : (
-              <Button id="hero-signin-btn" className="btn-primary-hero animate-bounce-subtle" onClick={signInWithGoogle}>
-                Sign in
-              </Button>
-            )}
+            {/* Always show Sign in — clicking Dashboard works for logged-in users via /dashboard auth check */}
+            <Button
+              id="hero-signin-btn"
+              className="btn-primary-hero animate-bounce-subtle"
+              onClick={signInWithGoogle}
+            >
+              Sign in
+            </Button>
             <Button
               asChild
               variant="outline"
@@ -92,13 +87,13 @@ function Hero() {
           ref={bookRef as React.RefObject<HTMLDivElement>}
           className={`w-full scroll-reveal reveal-fade-right ${bookVisible ? 'revealed' : ''}`}
         >
-            <div
-              ref={bookContainerRef}
-              className="relative hero-glow"
-              style={{ transform: `translateY(${parallaxY}px)` }}
-            >
-              <BookModel />
-            </div>
+          <div
+            ref={bookContainerRef}
+            className="relative hero-glow"
+            style={{ transform: `translateY(${parallaxY}px)` }}
+          >
+            <BookModel />
+          </div>
         </div>
       </div>
     </main>
@@ -106,4 +101,3 @@ function Hero() {
 }
 
 export default Hero;
-
