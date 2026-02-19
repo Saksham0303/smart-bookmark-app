@@ -5,7 +5,7 @@ export async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://smart-bookmark-app.vercel.app/dashboard',
+       redirectTo: 'https://smart-bookmark-app-alpha-puce.vercel.app/auth/callback',
       },
     });
 
