@@ -12,6 +12,94 @@ This repository contains a landing site with interactive 3D book scenes (React T
 
 ---
 
+🚧 Challenge 1: High-Performance 3D Rendering & Asset Optimization
+
+Problem:
+The 3D model caused slow loading, frame drops, and occasional browser freezes on low-end devices. In addition, incorrect asset loading paths sometimes resulted in blank scenes or missing textures.
+
+Solution:
+
+Converted models to optimized .glb format
+
+Reduced polygon count and compressed textures
+
+Implemented requestAnimationFrame render loop
+
+Added proper error handling for model loading
+
+Used minimal geometry and optimized lighting setup
+
+Result:
+Fast load time, stable FPS, and reliable rendering across devices with no blank-scene errors.
+
+🎮 Challenge 2: Real-Time Interaction, Controls & UI Synchronization
+
+Problem:
+Rotation controls felt unnatural, sliders did not always update the 3D object, and rapid input changes caused jitter and state mismatch between UI and model.
+
+Solution:
+
+Integrated orbit-style mouse controls with damping
+
+Limited rotation angles to prevent unnatural flips
+
+Bound UI state directly to mesh rotation & position
+
+Added debounced event listeners for inputs
+
+Implemented fallback default states to prevent undefined values
+
+Result:
+Smooth, intuitive interaction with perfectly synchronized UI and 3D model in real time.
+
+⏳ Challenge 3: Handling Model Loading States
+
+Problem:
+Users saw a blank screen while model was loading.
+
+Solution:
+
+Added loading indicator
+
+Displayed error message if model fails
+
+Fallback default mesh
+
+Result:
+Better UX and no confusion.
+
+⚙️ Challenge 4: Reset & Default State Management
+
+Problem:
+After multiple interactions, users had no quick way to return the bookmark to its original orientation, causing confusion.
+
+Solution:
+
+Implemented a Reset View function
+
+Stored default rotation & position values
+
+Restored camera and mesh state on reset
+
+Result:
+Users can instantly return to a clean starting view.
+
+.
+
+💾 Challenge 5: Persisting User Configuration
+
+Problem:
+User adjustments were lost on page refresh.
+
+Solution:
+
+Stored rotation values in localStorage
+
+Loaded saved configuration on startup
+
+Result:
+User customizations persist across sessions.
+
 **Table of contents**
 - [Features](#features)
 - [Tech stack](#tech-stack)
