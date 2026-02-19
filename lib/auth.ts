@@ -2,10 +2,17 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function signInWithGoogle() {
   try {
-    const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: "https://smart-bookmark-app-seven-mu.vercel.app"
+      }
+    });
+
     if (error) {
       console.error('Supabase Google sign-in error:', error);
     }
+
     return { data, error };
   } catch (err) {
     console.error('Unexpected signInWithGoogle error:', err);
@@ -22,5 +29,4 @@ export async function signOut() {
     console.error('Unexpected signOut error:', err);
     return { error: err as unknown };
   }
-
 }
